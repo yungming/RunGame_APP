@@ -4,19 +4,34 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class PedometerActivity extends ActionBarActivity implements SensorEventListener {
 
 
     private TextView StepText, UserName, UserCode;
+    private String msgs,IMEI,strName;
     private ToggleButton tgbOnOff;//切換按鈕
 
     private SensorManager aSensorManager;
@@ -29,6 +44,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
     private float mYOffset;
     private static long end = 0;
     private static long start = 0;
+
     //Last acceleration direction
     private float mLastDirections[] = new float[3 * 2];
     private float mLastExtremes[][] = { new float[3 * 2], new float[3 * 2] };
@@ -55,6 +71,9 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
         Bundle bundle = this.getIntent().getExtras();
         UserName.setText("Hello!"+bundle.getString("etName")+".");
         UserCode.setText("your code:"+bundle.getString("etCode"));
+
+        IMEI = bundle.getString("IMEI");
+        strName = bundle.getString("etName");
 
         //切換按鈕執行程式
         tgbOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -115,12 +134,18 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
 
                         if (isAlmostAsLargeAsPrevious && isPreviousLargeEnough && isNotContra) {
                             end = System.currentTimeMillis();
-                            if (end - start > 10) {// At this time it is determined that taking a step
+                            if (end - start > 10) {
+
+                            // At this time it is determined that taking a step
 
                                 CURRENT_SETP++;
-                                StepText.setText(""+CURRENT_SETP);
                                 mLastMatch = extType;
                                 start = end;
+                                StepText.setText(""+CURRENT_SETP);
+
+                                msgs=""+CURRENT_SETP;
+                                Thread x = new Thread(new sendPostRunnable(msgs));
+                                x.start();
                             }
                         } else {
                             mLastMatch = -1;
@@ -139,21 +164,99 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
     protected void onPause()
     {
         // TODO Auto-generated method stub
-    /* 取消註冊SensorEventListener */
+    //取消註冊SensorEventListener
         aSensorManager.unregisterListener(this);
-
         super.onPause();
     }
 
     protected void onResume() {
 
         aSensorManager.registerListener(this,
-                aSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                gravityRate * 1000);
-
+                aSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), gravityRate * 1000);
         super.onResume();
     }
     //---Pedometer End
+
+
+    private String uriAPI = "http://http://shankmc.no-ip.org:8080/RunGame/httpposttest.php";
+    /** 「要更新版面」的訊息代碼 */
+    protected static final int REFRESH_DATA = 0x00000001;
+
+    /** 建立UI Thread使用的Handler，來接收其他Thread來的訊息 */
+    Handler mHandler = new Handler()
+    {
+        @Override
+        public void handleMessage(Message msg)
+        {
+            switch (msg.what)
+            {
+                // 顯示網路上抓取的資料
+                case REFRESH_DATA:
+                    String result = null;
+                    if (msg.obj instanceof String)
+                        result = (String) msg.obj;
+                    if (result != null)
+                        // 印出網路回傳的文字
+                        //show.setText(result);
+                        break;
+            }
+        }
+    };
+
+    class sendPostRunnable implements Runnable
+    {
+        String strStep = null;
+        // 建構子，設定要傳的字串
+        public sendPostRunnable(String strStep)
+        {
+            this.strStep = strStep;
+        }
+        @Override
+        public void run()
+        {
+            String result = sendPostDataToInternet(strStep);
+            mHandler.obtainMessage(REFRESH_DATA, result).sendToTarget();
+        }
+    }
+
+    private String sendPostDataToInternet(String strStep)
+    {
+
+		//Create HTTP Post connection
+        HttpPost httpRequest = new HttpPost(uriAPI);
+		//Post運作傳送變數必須用NameValuePair[]陣列儲存
+
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+
+        params.add(new BasicNameValuePair("IMEI", IMEI));
+        params.add(new BasicNameValuePair("Step", strStep));
+        params.add(new BasicNameValuePair("Name", strName));
+
+
+        try
+
+        {
+			/* 發出HTTP request */
+            httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+			/* 取得HTTP response */
+            HttpResponse httpResponse = new DefaultHttpClient()
+                    .execute(httpRequest);
+			/* 若狀態碼為200 ok */
+            if (httpResponse.getStatusLine().getStatusCode() == 200)
+            {
+				/* 取出回應字串 */
+                String strResult = EntityUtils.toString(httpResponse
+                        .getEntity());
+                // 回傳回應字串
+                return strResult;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

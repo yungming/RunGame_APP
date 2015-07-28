@@ -55,7 +55,7 @@ public class MainActivity extends ActionBarActivity {
             String UserCode = etCode.getText().toString();
             bundle.putString("etName", UserName);
             bundle.putString("etCode", UserCode);
-
+            bundle.putString("IMEI", IMEI);
             intent.putExtras(bundle);
 
             startActivity(intent);
