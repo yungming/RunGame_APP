@@ -32,7 +32,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
 
     private TextView StepText, UserName, UserCode;
     private String msgs,IMEI,strName;
-    private ToggleButton tgbOnOff;//¤Á´««ö¶s
+    private ToggleButton tgbOnOff;//åˆ‡æ›æŒ‰éˆ•
 
     private SensorManager aSensorManager;
     private int gravityRate=5000;
@@ -75,7 +75,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
         IMEI = bundle.getString("IMEI");
         strName = bundle.getString("etName");
 
-        //¤Á´««ö¶s°õ¦æµ{¦¡
+        //åˆ‡æ›æŒ‰éˆ•åŸ·è¡Œç¨‹å¼
         tgbOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
             @Override
@@ -164,7 +164,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
     protected void onPause()
     {
         // TODO Auto-generated method stub
-    //¨ú®øµù¥USensorEventListener
+    //å–æ¶ˆè¨»å†ŠSensorEventListener
         aSensorManager.unregisterListener(this);
         super.onPause();
     }
@@ -178,11 +178,11 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
     //---Pedometer End
 
 
-    private String uriAPI = "http://http://shankmc.no-ip.org:8080/RunGame/httpposttest.php";
-    /** ¡u­n§ó·sª©­±¡vªº°T®§¥N½X */
+    private String uriAPI = "http://shankmc.no-ip.org:8080/RunGame/httpPostTest.php";
+    /** ã€Œè¦æ›´æ–°ç‰ˆé¢ã€çš„è¨Šæ¯ä»£ç¢¼ */
     protected static final int REFRESH_DATA = 0x00000001;
 
-    /** «Ø¥ßUI Thread¨Ï¥ÎªºHandler¡A¨Ó±µ¦¬¨ä¥LThread¨Óªº°T®§ */
+    /** å»ºç«‹UI Threadä½¿ç”¨çš„Handlerï¼Œä¾†æ¥æ”¶å…¶ä»–Threadä¾†çš„è¨Šæ¯ */
     Handler mHandler = new Handler()
     {
         @Override
@@ -190,13 +190,13 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
         {
             switch (msg.what)
             {
-                // Åã¥Üºô¸ô¤W§ì¨úªº¸ê®Æ
+                // é¡¯ç¤ºç¶²è·¯ä¸ŠæŠ“å–çš„è³‡æ–™
                 case REFRESH_DATA:
                     String result = null;
                     if (msg.obj instanceof String)
                         result = (String) msg.obj;
                     if (result != null)
-                        // ¦L¥Xºô¸ô¦^¶Çªº¤å¦r
+                        // å°å‡ºç¶²è·¯å›å‚³çš„æ–‡å­—
                         //show.setText(result);
                         break;
             }
@@ -206,7 +206,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
     class sendPostRunnable implements Runnable
     {
         String strStep = null;
-        // «Øºc¤l¡A³]©w­n¶Çªº¦r¦ê
+        // å»ºæ§‹å­ï¼Œè¨­å®šè¦å‚³çš„å­—ä¸²
         public sendPostRunnable(String strStep)
         {
             this.strStep = strStep;
@@ -224,7 +224,7 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
 
 		//Create HTTP Post connection
         HttpPost httpRequest = new HttpPost(uriAPI);
-		//Post¹B§@¶Ç°eÅÜ¼Æ¥²¶·¥ÎNameValuePair[]°}¦CÀx¦s
+		//Posté‹ä½œå‚³é€è®Šæ•¸å¿…é ˆç”¨NameValuePair[]é™£åˆ—å„²å­˜
 
         List<NameValuePair> params = new ArrayList<NameValuePair>();
 
@@ -236,18 +236,18 @@ public class PedometerActivity extends ActionBarActivity implements SensorEventL
         try
 
         {
-			/* µo¥XHTTP request */
+			/* ç™¼å‡ºHTTP request */
             httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
-			/* ¨ú±oHTTP response */
+			/* å–å¾—HTTP response */
             HttpResponse httpResponse = new DefaultHttpClient()
                     .execute(httpRequest);
-			/* ­Yª¬ºA½X¬°200 ok */
+			/* è‹¥ç‹€æ…‹ç¢¼ç‚º200 ok */
             if (httpResponse.getStatusLine().getStatusCode() == 200)
             {
-				/* ¨ú¥X¦^À³¦r¦ê */
+				/* å–å‡ºå›æ‡‰å­—ä¸² */
                 String strResult = EntityUtils.toString(httpResponse
                         .getEntity());
-                // ¦^¶Ç¦^À³¦r¦ê
+                // å›å‚³å›æ‡‰å­—ä¸²
                 return strResult;
             }
         } catch (Exception e)
